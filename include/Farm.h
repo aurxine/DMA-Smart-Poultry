@@ -99,6 +99,13 @@ class Farm
         bool isOptimal_Temperature(int month, int Age_week, float Temp);
         bool isOptimal_Humidity(int Age_week, float Hum);
         bool isOptimal_Ammonia(int Age_week, float NH3);
+        
+ 
+        String getErrorMessageInParameters(String parameter);
+        /*
+        input: temperature/humidity/ammonia
+        output: String returns from <parameter>_status()
+        */
 
         /*
         These functions show the status of the parameters.
