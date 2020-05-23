@@ -319,9 +319,15 @@ void sendMessagesToAllContacts()
   }
 }
 
+void reset()
+{
+  nodeMCU.reset(1);
+}
 
 void setup() {
   Serial.begin(9600);
+  pinMode(D1, HIGH);
+  attachInterrupt(digitalPinToInterrupt(D1), reset, FALLING);
   timeClient.begin();
   dht.begin();
   delay(5000);
