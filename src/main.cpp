@@ -292,6 +292,32 @@ void SendMessage(String message, String number)
   delay(1000);
 }
 
+String generateMessage()
+{
+  String Temperature_message = farm.getErrorMessageInParameters("temperature");
+  String Humidity_message = farm.getErrorMessageInParameters("humidity");
+  String Ammonia_message = farm.getErrorMessageInParameters("ammonia");
+
+
+  // Serial.println(Temperature_message);
+  // Serial.println(Humidity_message);
+  // Serial.println(Ammonia_message);
+
+  String error_message = "Temperature is " + Temperature_message + "\n"
+                        + "Humidity is" + Humidity_message + "\n"
+                        + "Ammonia is" + Ammonia_message;
+  return error_message;
+}
+
+void sendMessagesToAllContacts()
+{
+  String msg = generateMessage();
+  for(int i = 0; i < nodeMCU.NumberOfContacts(); i++)
+  {
+    SendMessage(msg, nodeMCU.Contact(i));
+  }
+}
+
 
 void setup() {
   Serial.begin(9600);
@@ -463,13 +489,13 @@ void loop() {
   float NH3 = analogRead(A0);
   doc["Sensor_Data"]["Ammonia"] = NH3 / 200;
 
-  farm.check_Temperature(clockTime.Month(), clockTime.weeksPassed() + 1, temp);
+  int temp_status = farm.check_Temperature(clockTime.Month(), clockTime.weeksPassed() + 1, temp);
   //farm.show_Temperature_status();
 
-  farm.check_Humidity(clockTime.weeksPassed() + 1, hum);
+  int hum_status = farm.check_Humidity(clockTime.weeksPassed() + 1, hum);
   //farm.show_Humidity_status();
 
-  farm.check_Ammonia(clockTime.weeksPassed() + 1, NH3 / 200);
+  int NH3_status = farm.check_Ammonia(clockTime.weeksPassed() + 1, NH3 / 200);
   //farm.show_Ammonia_status();
 
   doc["Time_Stamp"]["Hour"] = clockTime.Hour();
@@ -492,6 +518,10 @@ void loop() {
   else
   {
     Serial.println("Send Failed!");
+    if(temp_status + hum_status + NH3_status > 3)
+    {
+      sendMessagesToAllContacts();
+    }
   }
   
 
