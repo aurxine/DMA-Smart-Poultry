@@ -315,6 +315,7 @@ void sendMessagesToAllContacts()
   for(int i = 0; i < nodeMCU.NumberOfContacts(); i++)
   {
     SendMessage(msg, nodeMCU.Contact(i));
+    delay(50000);
   }
 }
 
