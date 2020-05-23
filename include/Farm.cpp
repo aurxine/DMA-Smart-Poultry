@@ -562,3 +562,27 @@ String Farm::Ammonia_status()
     return "Extreme";
 }
 
+
+String Farm::getErrorMessageInParameters(String parameter)
+{
+    parameter.toLowerCase();
+    if(parameter == "temperature")
+    {
+        return this->Temperature_status();
+    }
+    else if(parameter == "humidity")
+    {
+        return this->Humidity_status();
+    }
+    else if(parameter == "ammonia")
+    {
+        return this->Ammonia_status();
+    }
+    else
+    {
+        Serial.println("Invalid input");
+        return "";
+    }
+    
+
+}
