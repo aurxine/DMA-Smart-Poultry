@@ -48,10 +48,7 @@ void onConnectionEstablished()//send a confirmation mesage
 
 const int capacity = 300;
 DynamicJsonDocument doc(1024);
-// char json[] = "{\"Device_ID\":\"\", \"Time_Stamp\":{"
-//                 "\"Hour\":\"\", \"Minute\":\"\", \"Second\":\"\"}, \"Week\":\"\", \"Sensor_Data\":{"
-//                 "\"Temperature\":\"\", \"Humidity\":\"\", \"Ammonia\":\"\"}, \"Temperature_Status\":\"\","
-//                 "\"Humidity_Status\": \"\", \"Ammonia_Status\": \"\"}";
+
 char json[] = R"(
   {
    "Device_ID":,
