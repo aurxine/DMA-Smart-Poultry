@@ -23,14 +23,14 @@ class  setupDevice
         int contact_count = 0; 
 
         int current_address = 0; //address to save byte data
-        int reset_address = 0;
-        int ssid_length_address = 1;
-        int password_length_address = 2;
-        int number_of_contact_address = 3;
-        int ssid_start_address = 4;
-        int password_start_address = 20;
-        int date_start_address = 36;
-        int phone_number_start_address = 46; //44 and 45 is reserved for Farm_type and Initial age in Farm class
+        int reset_address = current_address;
+        int ssid_length_address = current_address + 1;
+        int password_length_address = current_address + 2;
+        int number_of_contact_address = current_address + 3;
+        int ssid_start_address = current_address + 4;
+        int password_start_address = current_address + 20;
+        int date_start_address = current_address + 36;
+        int phone_number_start_address = current_address + 46; //44 and 45 is reserved for Farm_type and Initial age in Farm class
 
         byte second, minute, hour, dayOfWeek, dayOfMonth, month, year; // initial setup date
 
