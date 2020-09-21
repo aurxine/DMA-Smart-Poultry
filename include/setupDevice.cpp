@@ -287,7 +287,7 @@ bool setupDevice::resetState()
     return this->readByteInEEPRPOM(reset_address);
 }
 
-bool setupDevice::setStartingDate(byte second, byte minute, byte hour, byte dayOfWeek, byte dayOfMonth, byte month, byte year)
+bool setupDevice::setStartingDate(int second, int minute, int hour, int dayOfWeek, int dayOfMonth, int month, int year)
 {
     this->second = second;
     this->minute = minute;
@@ -304,7 +304,7 @@ bool setupDevice::setStartingDate(byte second, byte minute, byte hour, byte dayO
     this->writeByteInEEPROM(byte_count++, dayOfWeek);
     this->writeByteInEEPROM(byte_count++, dayOfMonth);
     this->writeByteInEEPROM(byte_count++, month);
-    this->writeByteInEEPROM(byte_count++, year);
+    this->writeByteInEEPROM(byte_count++, year%1000);
 
     return true;
 }
@@ -318,37 +318,43 @@ void setupDevice::showStartingDate()
     }
 }
 
-byte setupDevice::Second()
+int setupDevice::Second()
 {
     return this->readByteInEEPRPOM(date_start_address);
 }
 
-byte setupDevice::Minute()
+int setupDevice::Minute()
 {
     return this->readByteInEEPRPOM(date_start_address + 1);
 }
 
-byte setupDevice::Hour()
+int setupDevice::Hour()
 {
     return this->readByteInEEPRPOM(date_start_address + 2);
 }
 
-byte setupDevice::DayOfWeek()
+int setupDevice::DayOfWeek()
 {
     return readByteInEEPRPOM(date_start_address + 3);
 }
 
-byte setupDevice::DayOfMonth()
+int setupDevice::DayOfMonth()
 {
     return readByteInEEPRPOM(date_start_address + 4);
 }
 
-byte setupDevice::Month()
+int setupDevice::Month()
 {
     return readByteInEEPRPOM(date_start_address + 5);
 }
 
-byte setupDevice::Year()
+int setupDevice::Year()
 {
-    return readByteInEEPRPOM(date_start_address + 6);
+    return readByteInEEPRPOM(date_start_address + 6) + 2000;
 }
+
+// setupDevice::~setupDevice()
+// {
+//     for(int i = 0; i < eeprom_size; i++)
+//         this->writeByteInEEPROM(i, 0);
+// }

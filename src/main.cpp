@@ -17,11 +17,13 @@
 #include <MQTT.h>
 #include <EspMQTTClient.h>
 #include <ESP8266WebServer.h>
+#include<RTClib.h>
 
 
 DHT_Unified dht(D5, DHT22); // dht(pin attached, sensor type)
 
-
+RTC_DS3231 rtc;
+DateTime initial_Date;
 RTC clockTime;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600);
@@ -51,7 +53,7 @@ DynamicJsonDocument doc(1024);
 
 char json[] = R"(
   {
-   "Device_ID":,
+   "Device_ID": "",
    "Time_Stamp":{
       "Hour":"",
       "Minute":"",
@@ -59,7 +61,7 @@ char json[] = R"(
    },
    "Week":"",
    "Sensor_Data":{
-      "Temperature":,
+      "Temperature":"",
       "Humidity":"",
       "Ammonia":""
    },
@@ -141,6 +143,7 @@ String InputData()
     </head>
     <body>
             <h1>Device Setup</h1>
+      <form name="configuration" onSubmit="return validateForm();" action="/save" method="post">
       WiFi SSID:
             <input type='text' name='ssid' id='ssid' size=16 autofocus> <br><br>
       WiFi Password:
@@ -169,6 +172,7 @@ String InputData()
             <div>
             <br><button id="save_button">Save</button><br><br>
             </div>
+      </form>
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>    
       <script>
         var ssid;
@@ -211,10 +215,12 @@ void handle_OnConnect() {
 
 void handle_Form()
 {
+  Serial.println("Handle form");
   server.send ( 200, "text/html", InputData());
 }
 
 void handle_Save() {
+  Serial.println("Handle Save");
   Serial.println(server.hasArg("farm"));
   
   if (server.arg("ssid")!= ""){
@@ -263,6 +269,7 @@ void handle_Save() {
     Serial.println("Farm type: " + server.arg("type"));
   }
   parameters_loaded = true;
+  server.send(200, "text/html", "Saved Succesfully!");
 
 }
 
@@ -302,8 +309,8 @@ String generateMessage()
   // Serial.println(Ammonia_message);
 
   String error_message = "Temperature is " + Temperature_message + "\n"
-                        + "Humidity is" + Humidity_message + "\n"
-                        + "Ammonia is" + Ammonia_message;
+                        + "Humidity is " + Humidity_message + "\n"
+                        + "Ammonia is " + Ammonia_message;
   return error_message;
 }
 
@@ -322,14 +329,39 @@ void reset()
   nodeMCU.reset(1);
 }
 
+void showDateTime(DateTime now)
+{
+  char t[20];
+  sprintf(t, "%02d:%02d:%02d %02d/%02d/%02d",  now.hour(), now.minute(), now.second(), now.day(), now.month(), now.year());  
+  
+  Serial.print(F("Date/Time: "));
+  Serial.println(t);
+}
+
+int daysPassed()
+{
+  DateTime now = rtc.now();
+  TimeSpan span = now - initial_Date;
+  // showDateTime(initial_Date);
+  // Serial.println(span.days());
+  return span.days();
+}
+
+int weeksPassed()
+{
+  int days = daysPassed();
+  return (int)days/7;
+}
+
 void setup() {
   Serial.begin(9600);
-  pinMode(D1, HIGH);
-  attachInterrupt(digitalPinToInterrupt(D1), reset, FALLING);
+  //Serial.println(nodeMCU.resetState());
+  //pinMode(D1, INPUT_PULLUP);
+  //attachInterrupt(digitalPinToInterrupt(D1), reset, FALLING);
   timeClient.begin();
   dht.begin();
   delay(5000);
-  
+  //nodeMCU.reset(1);
   if(nodeMCU.resetState())
   {
     // Set nodeMCU as Access Point
@@ -414,8 +446,8 @@ void setup() {
     Serial.print("Seconds: ");
     Serial.println(currentSecond);  
     
-    byte dayOfWeek = timeClient.getDay() + 1; // rtc format uses 1 as sunday
-    String weekDay = weekDays[dayOfWeek - 1]; // ntp uses 0 as sunday
+    byte dayOfWeek = timeClient.getDay() ;
+    String weekDay = weekDays[dayOfWeek]; // ntp uses 0 as sunday
     Serial.print("Week Day: ");
     Serial.println(weekDay);    
 
@@ -444,18 +476,25 @@ void setup() {
     Serial.println(currentDate);
 
     Serial.println("");
-
+    
     nodeMCU.setStartingDate(currentSecond, currentMinute, currentHour, dayOfWeek, 
-                            monthDay, currentMonth, currentYear%100);
-    //rtc module uses last two digits of the year.
-    clockTime.setTime(nodeMCU.Second(), nodeMCU.Minute(), nodeMCU.Hour(), nodeMCU.DayOfWeek(), 
-                      nodeMCU.DayOfMonth(), nodeMCU.Month(), nodeMCU.Year());
+                            monthDay, currentMonth, currentYear);
+    Serial.println(nodeMCU.Second());
+    Serial.println(nodeMCU.Minute());
+    Serial.println(nodeMCU.Hour());
+    Serial.println(nodeMCU.DayOfWeek());
+    Serial.println(nodeMCU.DayOfMonth());
+    Serial.println(nodeMCU.Month());
+    Serial.println(nodeMCU.Year());
+    
+    initial_Date = DateTime(nodeMCU.Year(), nodeMCU.Month(), nodeMCU.DayOfMonth(),
+                        nodeMCU.Hour(), nodeMCU.Minute(), nodeMCU.Second());
+    rtc.adjust(initial_Date);
     nodeMCU.reset(0);
   }
 
-  clockTime.setInitialDate(nodeMCU.Second(), nodeMCU.Minute(), nodeMCU.Hour(), nodeMCU.DayOfWeek(), 
-                      nodeMCU.DayOfMonth(), nodeMCU.Month(), nodeMCU.Year());
-
+  initial_Date = DateTime(nodeMCU.Year(), nodeMCU.Month(), nodeMCU.DayOfMonth(),
+                        nodeMCU.Hour(), nodeMCU.Minute(), nodeMCU.Second());
   Serial.println("Showing Data...");
   nodeMCU.showID();
   nodeMCU.showSSID();
@@ -463,10 +502,6 @@ void setup() {
   nodeMCU.showContacts();
   clockTime.displayTime();
 
-  Serial.println("Number of days passed: ");
-  Serial.println(clockTime.daysPassed());
-
-    
   DeserializationError error = deserializeJson(doc, json);
 
   // Test if parsing succeeds.
@@ -477,10 +512,11 @@ void setup() {
   doc["Device_ID"] = nodeMCU.ID();
 
   delay(5000);
-
 }
 
+bool flag = true;
 void loop() {
+  DateTime now = rtc.now();
   sensors_event_t event;
 
   dht.temperature().getEvent(&event); //calls an event of the sensor
@@ -494,19 +530,20 @@ void loop() {
   float NH3 = analogRead(A0);
   doc["Sensor_Data"]["Ammonia"] = NH3 / 200;
 
-  int temp_status = farm.check_Temperature(clockTime.Month(), clockTime.weeksPassed() + 1, temp);
+  int temp_status = farm.check_Temperature(now.month(), weeksPassed() + 1, temp);
   //farm.show_Temperature_status();
 
-  int hum_status = farm.check_Humidity(clockTime.weeksPassed() + 1, hum);
+  int hum_status = farm.check_Humidity(weeksPassed() + 1, hum);
   //farm.show_Humidity_status();
 
-  int NH3_status = farm.check_Ammonia(clockTime.weeksPassed() + 1, NH3 / 200);
+  int NH3_status = farm.check_Ammonia(weeksPassed() + 1, NH3 / 200);
   //farm.show_Ammonia_status();
+  Serial.println("Weeks Passed: " + (String)weeksPassed());
 
-  doc["Time_Stamp"]["Hour"] = clockTime.Hour();
-  doc["Time_Stamp"]["Minute"] = clockTime.Minute();
-  doc["Time_Stamp"]["Second"] = clockTime.Second();
-  doc["Week"] = clockTime.weeksPassed();
+  doc["Time_Stamp"]["Hour"] = now.hour();
+  doc["Time_Stamp"]["Minute"] = now.minute();
+  doc["Time_Stamp"]["Second"] = now.second();
+  doc["Week"] = weeksPassed();
 
   doc["Temperature_Status"] = farm.Temperature_status();
   doc["Humidity_Status"] = farm.Humidity_status();
@@ -528,10 +565,16 @@ void loop() {
       sendMessagesToAllContacts();
     }
   }
+
+  Serial.println(nodeMCU.Contact(0));
+  if((temp_status + hum_status + NH3_status) > 3 && flag)
+  {
+    Serial.println(generateMessage());
+    //sendMessagesToAllContacts();
+    //SendMessage("Hello", nodeMCU.Contact(0));
+    flag = false;
+  }
   
-
   delay(3000);
-  //clockTime.displayTime();
   client.loop();
-
 }

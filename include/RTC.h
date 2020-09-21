@@ -1,12 +1,15 @@
 #ifndef RTC_H
 #define RTC_H
 #include "Wire.h"
+#include<RTClib.h>
 #define DS3231_I2C_ADDRESS 0x68
 #include "Arduino.h"
 
 class RTC
 {
     private:
+        RTC_DS3231 rtc;
+        DateTime init_date;
         byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
         byte init_second, init_minute, init_hour, init_dayOfWeek, init_dayOfMonth, init_month, init_year;
         const int monthDays[12] = {31, 28, 31, 30, 31, 30, 
