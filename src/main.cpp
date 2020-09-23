@@ -17,7 +17,8 @@
 #include <ESP8266WebServer.h>
 #include<RTClib.h>
 
-
+bool flag = false;
+bool serial_debug = true;
 
 DHT_Unified dht(D5, DHT22); // dht(pin attached, sensor type)
 
@@ -214,58 +215,58 @@ void handle_OnConnect() {
 
 void handle_Form()
 {
-  Serial.println("Handle form");
+  if(serial_debug)Serial.println("Handle form");
   server.send ( 200, "text/html", InputData());
 }
 
 void handle_Save() {
-  Serial.println("Handle Save");
-  Serial.println(server.hasArg("farm"));
+  if(serial_debug)Serial.println("Handle Save");
+  if(serial_debug)Serial.println(server.hasArg("farm"));
   
   if (server.arg("ssid")!= ""){
     SSID = server.arg("ssid");
-    Serial.println("SSID: " + server.arg("ssid"));
+    if(serial_debug)Serial.println("SSID: " + server.arg("ssid"));
   }
 
   if (server.arg("password")!= ""){
     PASSWORD = server.arg("password");
-    Serial.println("Password: " + server.arg("password"));
+    if(serial_debug)Serial.println("Password: " + server.arg("password"));
   }
 
   if (server.arg("contact1")!= ""){
     PHONEBOOK[NUMBER_OF_CONTACTS++] = server.arg("contact1");
-    Serial.println("Contact 1: " + server.arg("contact1"));
+    if(serial_debug)Serial.println("Contact 1: " + server.arg("contact1"));
     
   }
 
   if (server.arg("contact2")!= ""){
     PHONEBOOK[NUMBER_OF_CONTACTS++] = server.arg("contact2");
-    Serial.println("Contact 2: " + server.arg("contact2"));
+    if(serial_debug)Serial.println("Contact 2: " + server.arg("contact2"));
   }
 
   if (server.arg("contact3")!= ""){
     PHONEBOOK[NUMBER_OF_CONTACTS++] = server.arg("contact3");
-    Serial.println("Contact 3: " + server.arg("contact3"));
+    if(serial_debug)Serial.println("Contact 3: " + server.arg("contact3"));
   }
 
   if (server.arg("contact4")!= ""){
     PHONEBOOK[NUMBER_OF_CONTACTS++] = server.arg("contact4");
-    Serial.println("Contact 4: " + server.arg("contact4"));
+    if(serial_debug)Serial.println("Contact 4: " + server.arg("contact4"));
   }
 
   if (server.arg("contact5")!= ""){
     PHONEBOOK[NUMBER_OF_CONTACTS++] = server.arg("contact5");
-    Serial.println("Contact 5: " + server.arg("contact5"));
+    if(serial_debug)Serial.println("Contact 5: " + server.arg("contact5"));
   }
 
   if (server.arg("age")!= ""){
     INITIAL_AGE = server.arg("age");
-    Serial.println("Age: " + server.arg("age"));
+    if(serial_debug)Serial.println("Age: " + server.arg("age"));
   }
 
   if (server.arg("type")!= ""){
     FARM_TYPE = server.arg("type");
-    Serial.println("Farm type: " + server.arg("type"));
+    if(serial_debug)Serial.println("Farm type: " + server.arg("type"));
   }
   parameters_loaded = true;
   server.send(200, "text/html", "Saved Succesfully!");
@@ -323,8 +324,7 @@ void sendMessagesToAllContacts()
   }
 }
 
-bool flag = false;
-bool serial_debug = true;
+
 
 void ICACHE_RAM_ATTR reset()
 {
@@ -337,8 +337,8 @@ void showDateTime(DateTime now)
   char t[20];
   sprintf(t, "%02d:%02d:%02d %02d/%02d/%02d",  now.hour(), now.minute(), now.second(), now.day(), now.month(), now.year());  
   
-  Serial.print(F("Date/Time: "));
-  Serial.println(t);
+  if(serial_debug)Serial.print(F("Date/Time: "));
+  if(serial_debug)Serial.println(t);
 }
 
 int daysPassed()
@@ -358,6 +358,7 @@ int weeksPassed()
 
 void setup() {
   Serial.begin(9600);
+  rtc.begin();
   //Serial.println(nodeMCU.resetState());
   pinMode(D4, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(D4), reset, FALLING);
@@ -368,17 +369,19 @@ void setup() {
   if(nodeMCU.resetState())
   {
     // Set nodeMCU as Access Point
-    Serial.print("Setting soft-AP configuration ... ");
+    if(serial_debug)Serial.print("Setting soft-AP configuration ... ");
 
-    Serial.println(WiFi.softAPConfig(local_ip, gateway, subnet) ? "Ready" : "Failed!");
+    if(WiFi.softAPConfig(local_ip, gateway, subnet))
+      if(serial_debug)Serial.println("Ready");
 
-    Serial.print("Setting soft-AP ... ");
+    if(serial_debug)Serial.print("Setting soft-AP ... ");
 
-    Serial.println(WiFi.softAP(ssid, password) ? "Ready" : "Failed!");
+    if(WiFi.softAP(ssid, password))
+      if(serial_debug)Serial.println("Ready");
 
-    Serial.print("Soft-AP IP address = ");
+    if(serial_debug)Serial.print("Soft-AP IP address = ");
 
-    Serial.println(WiFi.softAPIP());
+    if(serial_debug)Serial.println(WiFi.softAPIP());
 
     delay(100);
 
@@ -417,99 +420,101 @@ void setup() {
     while ( WiFi.status() != WL_CONNECTED ) 
     {
       delay ( 500 );
-      Serial.print ( "." );
+      if(serial_debug)Serial.print ( "." );
     }
 
-    Serial.println("Wifi connected!");
-    Serial.print("Wifi Mac address: ");
-    Serial.println(WiFi.macAddress());
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
+    if(serial_debug)Serial.println("Wifi connected!");
+    if(serial_debug)Serial.print("Wifi Mac address: ");
+    if(serial_debug)Serial.println(WiFi.macAddress());
+    if(serial_debug)Serial.print("IP address: ");
+    if(serial_debug)Serial.println(WiFi.localIP());
 
     //Set and save starting date
     timeClient.update();
 
     unsigned long epochTime = timeClient.getEpochTime();
-    Serial.print("Epoch Time: ");
-    Serial.println(epochTime);
+    if(serial_debug)Serial.print("Epoch Time: ");
+    if(serial_debug)Serial.println(epochTime);
     
     String formattedTime = timeClient.getFormattedTime();
-    Serial.print("Formatted Time: ");
-    Serial.println(formattedTime);  
+    if(serial_debug)Serial.print("Formatted Time: ");
+    if(serial_debug)Serial.println(formattedTime);  
 
     byte currentHour = timeClient.getHours() + 5; //should be +6, but it seems +5 works
-    Serial.print("Hour: ");
-    Serial.println(currentHour);  
+    if(serial_debug)Serial.print("Hour: ");
+    if(serial_debug)Serial.println(currentHour);  
 
     byte currentMinute = timeClient.getMinutes();
-    Serial.print("Minutes: ");
-    Serial.println(currentMinute); 
+    if(serial_debug)Serial.print("Minutes: ");
+    if(serial_debug)Serial.println(currentMinute); 
     
     byte currentSecond = timeClient.getSeconds();
-    Serial.print("Seconds: ");
-    Serial.println(currentSecond);  
+    if(serial_debug)Serial.print("Seconds: ");
+    if(serial_debug)Serial.println(currentSecond);  
     
     byte dayOfWeek = timeClient.getDay() ;
     String weekDay = weekDays[dayOfWeek]; // ntp uses 0 as sunday
-    Serial.print("Week Day: ");
-    Serial.println(weekDay);    
+    if(serial_debug)Serial.print("Week Day: ");
+    if(serial_debug)Serial.println(weekDay);    
 
     //Get a time structure
     struct tm *ptm = gmtime ((time_t *)&epochTime); 
 
     byte monthDay = ptm->tm_mday;
-    Serial.print("Month day: ");
-    Serial.println(monthDay);
+    if(serial_debug)Serial.print("Month day: ");
+    if(serial_debug)Serial.println(monthDay);
 
     byte currentMonth = ptm->tm_mon+1;
-    Serial.print("Month: ");
-    Serial.println(currentMonth);
+    if(serial_debug)Serial.print("Month: ");
+    if(serial_debug)Serial.println(currentMonth);
 
     String currentMonthName = months[currentMonth-1];
-    Serial.print("Month name: ");
-    Serial.println(currentMonthName);
+    if(serial_debug)Serial.print("Month name: ");
+    if(serial_debug)Serial.println(currentMonthName);
 
     int currentYear = ptm->tm_year+1900;
-    Serial.print("Year: ");
-    Serial.println(currentYear);
+    if(serial_debug)Serial.print("Year: ");
+    if(serial_debug)Serial.println(currentYear);
 
     //Print complete date:
     String currentDate = String(currentYear) + "-" + String(currentMonth) + "-" + String(monthDay);
-    Serial.print("Current date: ");
-    Serial.println(currentDate);
+    if(serial_debug)Serial.print("Current date: ");
+    if(serial_debug)Serial.println(currentDate);
 
-    Serial.println("");
+    if(serial_debug)Serial.println("");
     
     nodeMCU.setStartingDate(currentSecond, currentMinute, currentHour, dayOfWeek, 
                             monthDay, currentMonth, currentYear);
-    Serial.println(nodeMCU.Second());
-    Serial.println(nodeMCU.Minute());
-    Serial.println(nodeMCU.Hour());
-    Serial.println(nodeMCU.DayOfWeek());
-    Serial.println(nodeMCU.DayOfMonth());
-    Serial.println(nodeMCU.Month());
-    Serial.println(nodeMCU.Year());
+    if(serial_debug)Serial.println(nodeMCU.Second());
+    if(serial_debug)Serial.println(nodeMCU.Minute());
+    if(serial_debug)Serial.println(nodeMCU.Hour());
+    if(serial_debug)Serial.println(nodeMCU.DayOfWeek());
+    if(serial_debug)Serial.println(nodeMCU.DayOfMonth());
+    if(serial_debug)Serial.println(nodeMCU.Month());
+    if(serial_debug)Serial.println(nodeMCU.Year());
     
-    initial_Date = DateTime(nodeMCU.Year(), nodeMCU.Month(), nodeMCU.DayOfMonth(),
-                        nodeMCU.Hour(), nodeMCU.Minute(), nodeMCU.Second());
-    rtc.adjust(initial_Date);
+    rtc.adjust(DateTime(nodeMCU.Year(), nodeMCU.Month(), nodeMCU.DayOfMonth(),
+                        nodeMCU.Hour(), nodeMCU.Minute(), nodeMCU.Second()));
     nodeMCU.reset(0);
   }
 
   initial_Date = DateTime(nodeMCU.Year(), nodeMCU.Month(), nodeMCU.DayOfMonth(),
                         nodeMCU.Hour(), nodeMCU.Minute(), nodeMCU.Second());
-  Serial.println("Showing Data...");
-  nodeMCU.showID();
-  nodeMCU.showSSID();
-  nodeMCU.showPassword();
-  nodeMCU.showContacts();
+  if(serial_debug)
+  {
+    Serial.println("Showing Data...");
+    nodeMCU.showID();
+    nodeMCU.showSSID();
+    nodeMCU.showPassword();
+    nodeMCU.showContacts();
+  }
 
   DeserializationError error = deserializeJson(doc, json);
 
   // Test if parsing succeeds.
   if (error) {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.c_str());
+    if(serial_debug)Serial.print(F("deserializeJson() failed: "));
+    if(serial_debug)Serial.println(error.c_str());
   }
   doc["Device_ID"] = nodeMCU.ID();
 
@@ -519,6 +524,7 @@ void setup() {
 
 void loop() {
   DateTime now = rtc.now();
+  //showDateTime(now);
   sensors_event_t event;
 
   dht.temperature().getEvent(&event); //calls an event of the sensor
@@ -562,10 +568,10 @@ void loop() {
   else
   {
     if(serial_debug)Serial.println("Send Failed!");
-    if(temp_status + hum_status + NH3_status > 3)
-    {
-      sendMessagesToAllContacts();
-    }
+    // if(temp_status + hum_status + NH3_status > 3)
+    // {
+    //   sendMessagesToAllContacts();
+    // }
   }
   
   delay(3000);
