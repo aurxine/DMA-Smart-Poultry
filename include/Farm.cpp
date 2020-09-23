@@ -331,20 +331,37 @@ int Farm::check_Ammonia(int Age_week, float Current_Ammonia)
     this->Initial_age = readByteInEEPRPOM(45);
     this->Age_week = Age_week + Farm_type + Initial_age;
     this->Current_Ammonia = Current_Ammonia;
-    if(Current_Ammonia >= 0 && Current_Ammonia <= Ammonia[Age_week - 1][0])
-    return 0;
+
+    if(Current_Ammonia <= Ammonia[Age_week - 1][0])
+    {
+        //Serial.println("Optimal");
+        return 0;
+    }
+    
 
     else if(Current_Ammonia >= Ammonia[Age_week - 1][0] && Current_Ammonia <= Ammonia[Age_week - 1][1])
-    return 1;
+    {
+        //Serial.println("Optimal Low");
+        return 1;
+    }
 
     else if(Current_Ammonia >= Ammonia[Age_week - 1][1] && Current_Ammonia <= Ammonia[Age_week - 1][2])
-    return 2;
+    {
+        //Serial.println("Optimal High");
+        return 2;
+    }
 
     else if(Current_Ammonia >= Ammonia[Age_week - 1][2] && Current_Ammonia <= Ammonia[Age_week - 1][3])
-    return 3;
+    {
+        //Serial.println("High");
+        return 3;
+    }
 
     else
-    return 4;
+    {
+        //Serial.println("Extreme");
+        return 4;
+    }
 }
 
 bool Farm::isOptimal_Temperature(int month, int Age_week, float Current_Temperature)
