@@ -5,8 +5,6 @@
 #include "nodeMCUpins.h"
 #include "setupDevice.h"
 #include "setupDevice.cpp"
-#include "RTC.h"
-#include "RTC.cpp" 
 #include "Farm.h"
 #include "Farm.cpp"
 #include <SPI.h>
@@ -20,11 +18,12 @@
 #include<RTClib.h>
 
 
+
 DHT_Unified dht(D5, DHT22); // dht(pin attached, sensor type)
 
 RTC_DS3231 rtc;
 DateTime initial_Date;
-RTC clockTime;
+
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600);
 //Week Days
@@ -320,13 +319,17 @@ void sendMessagesToAllContacts()
   for(int i = 0; i < nodeMCU.NumberOfContacts(); i++)
   {
     SendMessage(msg, nodeMCU.Contact(i));
-    delay(50000);
+    delay(5000);
   }
 }
 
-void reset()
+bool flag = false;
+bool serial_debug = true;
+
+void ICACHE_RAM_ATTR reset()
 {
   nodeMCU.reset(1);
+  //flag = true;
 }
 
 void showDateTime(DateTime now)
@@ -356,8 +359,8 @@ int weeksPassed()
 void setup() {
   Serial.begin(9600);
   //Serial.println(nodeMCU.resetState());
-  //pinMode(D1, INPUT_PULLUP);
-  //attachInterrupt(digitalPinToInterrupt(D1), reset, FALLING);
+  pinMode(D4, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(D4), reset, FALLING);
   timeClient.begin();
   dht.begin();
   delay(5000);
@@ -500,7 +503,6 @@ void setup() {
   nodeMCU.showSSID();
   nodeMCU.showPassword();
   nodeMCU.showContacts();
-  clockTime.displayTime();
 
   DeserializationError error = deserializeJson(doc, json);
 
@@ -514,7 +516,7 @@ void setup() {
   delay(5000);
 }
 
-bool flag = true;
+
 void loop() {
   DateTime now = rtc.now();
   sensors_event_t event;
@@ -538,7 +540,7 @@ void loop() {
 
   int NH3_status = farm.check_Ammonia(weeksPassed() + 1, NH3 / 200);
   //farm.show_Ammonia_status();
-  Serial.println("Weeks Passed: " + (String)weeksPassed());
+  if(serial_debug)Serial.println("Weeks Passed: " + (String)weeksPassed());
 
   doc["Time_Stamp"]["Hour"] = now.hour();
   doc["Time_Stamp"]["Minute"] = now.minute();
@@ -555,24 +557,15 @@ void loop() {
 
   if(client.publish(Topic, payload))
   {
-    Serial.println("Send Success!");
+    if(serial_debug)Serial.println("Send Success!");
   }
   else
   {
-    Serial.println("Send Failed!");
+    if(serial_debug)Serial.println("Send Failed!");
     if(temp_status + hum_status + NH3_status > 3)
     {
       sendMessagesToAllContacts();
     }
-  }
-
-  Serial.println(nodeMCU.Contact(0));
-  if((temp_status + hum_status + NH3_status) > 3 && flag)
-  {
-    Serial.println(generateMessage());
-    //sendMessagesToAllContacts();
-    //SendMessage("Hello", nodeMCU.Contact(0));
-    flag = false;
   }
   
   delay(3000);
