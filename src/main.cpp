@@ -4,9 +4,7 @@
 #include <DHT_U.h>
 #include "nodeMCUpins.h"
 #include "setupDevice.h"
-#include "setupDevice.cpp"
 #include "Farm.h"
-#include "Farm.cpp"
 #include <SPI.h>
 #include <ESP8266WiFi.h>
 #include <NTPClient.h>
