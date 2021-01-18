@@ -18,6 +18,29 @@
 
 
 DHT_Unified dht(D5, DHT22); // dht(pin attached, sensor type)
+#define m -0.243 // slope value from mq137 datasheet
+#define b 0.323 // bias value from mq137 datasheet
+#define RL 47 // Load resistance 47k ohm
+#define Ro 8.5 // value of Rs in fresh air
+#define MQ137_Sensor A0
+
+
+double Ammonia_ppm(int iteration)
+{
+  float VRL = 0;
+  for(int i = 0; i < iteration; i++)
+  {
+    VRL += analogRead(MQ137_Sensor)*(5.0/1023.0); //Measure the voltage drop and convert to 0-5V
+  }
+  VRL = VRL/iteration; // the avg value of VRL
+  float Rs = ((5.0/VRL)-1) * RL;
+  float ratio = Rs/Ro;
+  double ppm = pow(10, ((log10(ratio)-b)/m)); //use formula to calculate ppm
+  Serial.print(ppm); //Display ppm
+  return ppm;
+}
+
+
 
 RTC_DS3231 rtc;
 DateTime initial_Date;
@@ -527,8 +550,8 @@ void loop() {
   float hum = event.relative_humidity ; // sensor event records humidity
   doc["Sensor_Data"]["Humidity"] = hum;
 
-  float NH3 = analogRead(A0);
-  doc["Sensor_Data"]["Ammonia"] = NH3 / 200;
+  double NH3 = Ammonia_ppm(500);
+  doc["Sensor_Data"]["Ammonia"] = NH3;
 
   int temp_status = farm.check_Temperature(now.month(), weeksPassed() + 1, temp);
   //farm.show_Temperature_status();
