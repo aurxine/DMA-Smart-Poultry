@@ -6,7 +6,7 @@
 
 setupDevice::setupDevice()
 {
-    device_id = "BCDDC29AC77B";
+    device_id = "483FDA0D7E8E";
     if(this->readByteInEEPRPOM(reset_address) == 0)
     {
         wifi_ssid = this->readStringInEEPRPOM(ssid_start_address, this->readByteInEEPRPOM(ssid_length_address));
@@ -106,11 +106,11 @@ int setupDevice::writeStringInEEPROM(int init_addr, int size, String data)
         //Serial.println(data[j]);
         if(EEPROM.commit())
         {
-            Serial.println("EEPROM successfully committed");
+            // Serial.println("EEPROM successfully committed");
         }
         else 
         {
-            Serial.println("ERROR! EEPROM commit failed");
+            // Serial.println("ERROR! EEPROM commit failed");
             return -1;
         }
     }
@@ -123,11 +123,11 @@ int setupDevice::writeByteInEEPROM(int init_addr, byte data)
     EEPROM.write(init_addr, data);
         if(EEPROM.commit())
         {
-            Serial.println("EEPROM successfully committed");
+            // Serial.println("EEPROM successfully committed");
         }
         else 
         {
-            Serial.println("ERROR! EEPROM commit failed");
+            // Serial.println("ERROR! EEPROM commit failed");
             return -1;
         }
     return ++init_addr; //new address
@@ -246,7 +246,7 @@ void setupDevice::getContact(String phone_number)
     }
     else
     {
-        Serial.println("Reached maximum phone number");
+        // Serial.println("Reached maximum phone number");
     }
 }
 

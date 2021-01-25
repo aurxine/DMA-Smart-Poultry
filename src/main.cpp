@@ -24,6 +24,8 @@ DHT_Unified dht(D5, DHT22); // dht(pin attached, sensor type)
 #define Ro 8.5 // value of Rs in fresh air
 #define MQ137_Sensor A0
 
+#define LED_pin SD3
+
 
 double Ammonia_ppm(int iteration)
 {
@@ -345,7 +347,7 @@ void sendMessagesToAllContacts()
 }
 
 bool flag = false;
-bool serial_debug = true;
+bool serial_debug = false;
 
 void ICACHE_RAM_ATTR reset()
 {
@@ -377,29 +379,69 @@ int weeksPassed()
   return (int)days/7;
 }
 
+
+bool Blink_LED(int times, int Delay)
+{
+  if(Delay == 0)
+  {
+    digitalWrite(LED_pin, HIGH);
+    return true;
+  }
+  
+  if(times == 0)
+  {
+    digitalWrite(LED_pin, LOW);
+    return false;
+  }
+
+  for(int i = 0; i < times; i++)
+  {
+    digitalWrite(LED_pin, HIGH);
+    delay(Delay);
+    digitalWrite(LED_pin, LOW);
+    delay(Delay);
+  }
+  return false;
+}
+
 void setup() {
+  
   Serial.begin(9600);
   //Serial.println(nodeMCU.resetState());
-  pinMode(D4, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(D4), reset, FALLING);
+  pinMode(D7, INPUT_PULLUP);
+  pinMode(LED_pin, OUTPUT);
+  attachInterrupt(digitalPinToInterrupt(D7), reset, FALLING);
   timeClient.begin();
   dht.begin();
   delay(5000);
-  //nodeMCU.reset(1);
+  Blink_LED(5, 100);
+  // nodeMCU.reset(1);
   if(nodeMCU.resetState())
   {
     // Set nodeMCU as Access Point
-    Serial.print("Setting soft-AP configuration ... ");
+    // Serial.print("Setting soft-AP configuration ... ");
+    WiFi.softAPConfig(local_ip, gateway, subnet);
 
-    Serial.println(WiFi.softAPConfig(local_ip, gateway, subnet) ? "Ready" : "Failed!");
+    // Serial.println( ? "Ready" : "Failed!");
 
-    Serial.print("Setting soft-AP ... ");
+    // Serial.print("Setting soft-AP ... ");
+    WiFi.softAP(ssid, password);
 
-    Serial.println(WiFi.softAP(ssid, password) ? "Ready" : "Failed!");
+    // Serial.println( ? "Ready" : "Failed!");
 
-    Serial.print("Soft-AP IP address = ");
+    // Serial.print("Soft-AP IP address = ");
 
-    Serial.println(WiFi.softAPIP());
+    // Serial.println(WiFi.softAPIP());
+
+    // Serial.print("Mac Address = ");
+
+    String mac_address = WiFi.macAddress();
+
+    mac_address.replace(":", "");
+
+    // Serial.println(mac_address);
+
+    nodeMCU.getID(mac_address);
 
     delay(100);
 
@@ -418,9 +460,9 @@ void setup() {
     }
 
     nodeMCU.getSSID(SSID);
-    nodeMCU.showSSID();
+    // nodeMCU.showSSID();
     nodeMCU.getPassword(PASSWORD);
-    nodeMCU.showPassword();
+    // nodeMCU.showPassword();
 
     nodeMCU.getNumberOfContacts(NUMBER_OF_CONTACTS);
 
@@ -438,78 +480,78 @@ void setup() {
     while ( WiFi.status() != WL_CONNECTED ) 
     {
       delay ( 500 );
-      Serial.print ( "." );
+      // Serial.print ( "." );
     }
 
-    Serial.println("Wifi connected!");
-    Serial.print("Wifi Mac address: ");
-    Serial.println(WiFi.macAddress());
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
 
+
+    // Serial.print("IP address: ");
+    // Serial.println(WiFi.localIP());
+    // Serial.println("Wifi connected!");
+    Blink_LED(3, 500);
     //Set and save starting date
     timeClient.update();
 
     unsigned long epochTime = timeClient.getEpochTime();
-    Serial.print("Epoch Time: ");
-    Serial.println(epochTime);
+    // Serial.print("Epoch Time: ");
+    // Serial.println(epochTime);
     
     String formattedTime = timeClient.getFormattedTime();
-    Serial.print("Formatted Time: ");
-    Serial.println(formattedTime);  
+    // Serial.print("Formatted Time: ");
+    // Serial.println(formattedTime);  
 
     byte currentHour = timeClient.getHours() + 5; //should be +6, but it seems +5 works
-    Serial.print("Hour: ");
-    Serial.println(currentHour);  
+    // Serial.print("Hour: ");
+    // Serial.println(currentHour);  
 
     byte currentMinute = timeClient.getMinutes();
-    Serial.print("Minutes: ");
-    Serial.println(currentMinute); 
+    // Serial.print("Minutes: ");
+    // Serial.println(currentMinute); 
     
     byte currentSecond = timeClient.getSeconds();
-    Serial.print("Seconds: ");
-    Serial.println(currentSecond);  
+    // Serial.print("Seconds: ");
+    // Serial.println(currentSecond);  
     
     byte dayOfWeek = timeClient.getDay() ;
     String weekDay = weekDays[dayOfWeek]; // ntp uses 0 as sunday
-    Serial.print("Week Day: ");
-    Serial.println(weekDay);    
+    // Serial.print("Week Day: ");
+    // Serial.println(weekDay);    
 
     //Get a time structure
     struct tm *ptm = gmtime ((time_t *)&epochTime); 
 
     byte monthDay = ptm->tm_mday;
-    Serial.print("Month day: ");
-    Serial.println(monthDay);
+    // Serial.print("Month day: ");
+    // Serial.println(monthDay);
 
     byte currentMonth = ptm->tm_mon+1;
-    Serial.print("Month: ");
-    Serial.println(currentMonth);
+    // Serial.print("Month: ");
+    // Serial.println(currentMonth);
 
     String currentMonthName = months[currentMonth-1];
-    Serial.print("Month name: ");
-    Serial.println(currentMonthName);
+    // Serial.print("Month name: ");
+    // Serial.println(currentMonthName);
 
     int currentYear = ptm->tm_year+1900;
-    Serial.print("Year: ");
-    Serial.println(currentYear);
+    // Serial.print("Year: ");
+    // Serial.println(currentYear);
 
     //Print complete date:
     String currentDate = String(currentYear) + "-" + String(currentMonth) + "-" + String(monthDay);
-    Serial.print("Current date: ");
-    Serial.println(currentDate);
+    // Serial.print("Current date: ");
+    // Serial.println(currentDate);
 
-    Serial.println("");
+    // Serial.println("");
     
     nodeMCU.setStartingDate(currentSecond, currentMinute, currentHour, dayOfWeek, 
                             monthDay, currentMonth, currentYear);
-    Serial.println(nodeMCU.Second());
-    Serial.println(nodeMCU.Minute());
-    Serial.println(nodeMCU.Hour());
-    Serial.println(nodeMCU.DayOfWeek());
-    Serial.println(nodeMCU.DayOfMonth());
-    Serial.println(nodeMCU.Month());
-    Serial.println(nodeMCU.Year());
+    // Serial.println(nodeMCU.Second());
+    // Serial.println(nodeMCU.Minute());
+    // Serial.println(nodeMCU.Hour());
+    // Serial.println(nodeMCU.DayOfWeek());
+    // Serial.println(nodeMCU.DayOfMonth());
+    // Serial.println(nodeMCU.Month());
+    // Serial.println(nodeMCU.Year());
     
     initial_Date = DateTime(nodeMCU.Year(), nodeMCU.Month(), nodeMCU.DayOfMonth(),
                         nodeMCU.Hour(), nodeMCU.Minute(), nodeMCU.Second());
@@ -519,18 +561,18 @@ void setup() {
 
   initial_Date = DateTime(nodeMCU.Year(), nodeMCU.Month(), nodeMCU.DayOfMonth(),
                         nodeMCU.Hour(), nodeMCU.Minute(), nodeMCU.Second());
-  Serial.println("Showing Data...");
-  nodeMCU.showID();
-  nodeMCU.showSSID();
-  nodeMCU.showPassword();
-  nodeMCU.showContacts();
+  // Serial.println("Showing Data...");
+  // nodeMCU.showID();
+  // nodeMCU.showSSID();
+  // nodeMCU.showPassword();
+  // nodeMCU.showContacts();
 
   DeserializationError error = deserializeJson(doc, json);
 
   // Test if parsing succeeds.
   if (error) {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.c_str());
+    // Serial.print(F("deserializeJson() failed: "));
+    // Serial.println(error.c_str());
   }
   doc["Device_ID"] = nodeMCU.ID();
 
@@ -559,7 +601,7 @@ void loop() {
   int hum_status = farm.check_Humidity(weeksPassed() + 1, hum);
   //farm.show_Humidity_status();
 
-  int NH3_status = farm.check_Ammonia(weeksPassed() + 1, NH3 / 200);
+  int NH3_status = farm.check_Ammonia(weeksPassed() + 1, NH3);
   //farm.show_Ammonia_status();
   if(serial_debug)Serial.println("Weeks Passed: " + (String)weeksPassed());
 
@@ -579,12 +621,15 @@ void loop() {
   if(client.publish(Topic, payload))
   {
     if(serial_debug)Serial.println("Send Success!");
+    Blink_LED(1, 500);
   }
   else
   {
     if(serial_debug)Serial.println("Send Failed!");
+    Blink_LED(2, 200);
     if(temp_status + hum_status + NH3_status > 3)
     {
+      Blink_LED(1, 0);
       sendMessagesToAllContacts();
     }
   }

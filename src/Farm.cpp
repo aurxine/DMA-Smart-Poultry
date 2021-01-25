@@ -1,9 +1,11 @@
 #include "Farm.h"
+#include<EEPROM.h>
 #include<Arduino.h>
+
 
 int writeByteInEEPROM(int init_addr, byte data)
 {
-    EEPROM.begin(eeprom_size);
+    //EEPROM.begin(eeprom_size);
     EEPROM.write(init_addr, data);
         if(EEPROM.commit())
         {
@@ -19,7 +21,7 @@ int writeByteInEEPROM(int init_addr, byte data)
 
 byte readByteInEEPRPOM(int address)
 {
-    EEPROM.begin(eeprom_size);
+    //EEPROM.begin(eeprom_size);
     byte data;
     data = EEPROM.read(address);
     //Serial.println("Data: "+String(data));
